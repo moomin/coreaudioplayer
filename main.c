@@ -2,17 +2,29 @@
 #include <AudioUnit/AudioComponent.h>
 #include <AudioUnit/AudioUnit.h>
 
-int GetAudioUnit();
+int GetAudioUnit(AudioComponentInstance *ci);
+int startPlay(AudioUnit *ci);
+int stopPlay(AudioUnit *ci);
+int closeUnit(AudioUnit *ci);
 
 int main(int argc, char **argv)
 {
+  int status;
+  AudioUnit au;
+
   printf("Hello World!\n");
 
-  printf ("Search result: %d\n", GetAudioUnit());
-  return 0;
+  status = GetAudioUnit(&au);
+  printf ("Search result: %d\n", status);
+
+  startPlay(&au);
+  stopPlay(&au);
+  closeUnit(&au);
+
+  return status;
 }
 
-OSStatus AURender(void *inRefCon,
+OSStatus myRenderer(void *inRefCon,
                   AudioUnitRenderActionFlags *ioActionFlags,
                   const AudioTimeStamp inTimeStamp,
                   UInt32 inBusNumber,
@@ -23,11 +35,10 @@ OSStatus AURender(void *inRefCon,
   return noErr;
 }
 
-int GetAudioUnit()
+int GetAudioUnit(AudioComponentInstance *ci)
 {
   AudioComponent component;
   AudioComponentDescription dsc;
-  AudioComponentInstance ci;
   OSStatus status;
   AURenderCallback renderer;
 
@@ -47,33 +58,58 @@ int GetAudioUnit()
   }
 
   //get AudioUnit instance
-  status = AudioComponentInstanceNew(component, &ci);
+  status = AudioComponentInstanceNew(component, ci);
 
   if (status != noErr)
   {
     return 2;
   }
 
-  //initialize the AU
-  status = AudioUnitInitialize(ci);
+  //set renderer's function address
+  renderer = myRenderer;
+
+  void *nodata;
+  status = AudioUnitAddRenderNotify(*ci, renderer, nodata);
 
   if (status != noErr)
   {
     return 3;
   }
 
-  //set renderer's function address
-  renderer = &AURender;
-
-  void *nodata;
-  status = AudioUnitAddRenderNotify(ci, renderer, nodata);
-
-  if (status != noErr)
-  {
-    return 4;
-  }
-
-  status = AudioUnitRender(ci, 0, );
-
   return 0;
 }
+
+int startPlay(AudioUnit *c)
+{
+  AudioStreamBasicDescription sf;
+  sf.mSampleRate = 44100.0;
+  sf.mFormatID = kAudioFormatLinearPCM;
+  sf.mFormatFlags = 0;
+  sf.mBytesInAPacket = 0;
+  sf.mFramesPerPacket = 0;
+  sf.mBytesPerFrame = 0;
+  sf.mChannelsPerFrame =
+  sf.mBitsPerChannel = 0;
+
+  AudioUnitSetProperty(*c, kAudioUnitProperty_StreamFormat,
+                       kAudioUnitScope_Input,
+                       0, &sf, sizeof(AudioStreamBasicDescription));
+
+  AudioUnitInitialize(*c);
+  AudioOutputUnitStart(*c);
+  return 0;
+}
+
+int stopPlay(AudioUnit *c)
+{
+  AudioOutputUnitStop(*c);
+  AudioUnitUninitialize(*c);
+  return 0;
+}
+
+int closeUnit(AudioUnit *c)
+{
+  AudioComponentInstanceDispose(*c);
+  return 0; 
+}
+
