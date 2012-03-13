@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <AudioUnit/AudioComponent.h>
 #include <AudioUnit/AudioUnit.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 int GetAudioUnit(AudioComponentInstance *ci);
 int startPlay(AudioUnit *ci);
@@ -15,10 +16,14 @@ int main(int argc, char **argv)
   printf("Hello World!\n");
 
   status = GetAudioUnit(&au);
-  printf ("Search result: %d\n", status);
+  printf("Search result: %d\n", status);
 
-  startPlay(&au);
-  stopPlay(&au);
+  status = startPlay(&au);
+  printf("startPlay: %d\n", status);
+
+  status = stopPlay(&au);
+  printf("stopPlay: %d\n", status);
+
   closeUnit(&au);
 
   return status;
@@ -65,11 +70,19 @@ int GetAudioUnit(AudioComponentInstance *ci)
     return 2;
   }
 
-  //set renderer's function address
-  renderer = myRenderer;
+  AURenderCallbackStruct input;
+  input.inputProc = myRenderer;
+  input.inputProcRefCon = NULL;
 
-  void *nodata;
-  status = AudioUnitAddRenderNotify(*ci, renderer, nodata);
+  renderer = myRenderer;
+  void *vd;
+
+  status = AudioUnitAddRenderNotify(*ci, renderer, vd);
+
+/*
+  status = AudioUnitSetProperty(*ci, kAudioUnitProperty_SetRenderCallback,
+                                kAudioUnitScope_Input, 0, &input, sizeof(input));
+*/
 
   if (status != noErr)
   {
@@ -81,29 +94,66 @@ int GetAudioUnit(AudioComponentInstance *ci)
 
 int startPlay(AudioUnit *c)
 {
+  OSStatus status;
   AudioStreamBasicDescription sf;
   sf.mSampleRate = 44100.0;
   sf.mFormatID = kAudioFormatLinearPCM;
-  sf.mFormatFlags = 0;
-  sf.mBytesInAPacket = 0;
-  sf.mFramesPerPacket = 0;
-  sf.mBytesPerFrame = 0;
-  sf.mChannelsPerFrame =
-  sf.mBitsPerChannel = 0;
+  sf.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger |
+                    kLinearPCMFormatFlagIsPacked |
+                    kAudioFormatFlagsNativeEndian |
+                    kAudioFormatFlagIsNonInterleaved;
+  sf.mBytesPerPacket = 2;
+  sf.mFramesPerPacket = 1;
+  sf.mBytesPerFrame = 2;
+  sf.mChannelsPerFrame = 2;
+  sf.mBitsPerChannel = 16;
 
-  AudioUnitSetProperty(*c, kAudioUnitProperty_StreamFormat,
+  status = AudioUnitSetProperty(*c,
+                       kAudioUnitProperty_StreamFormat,
                        kAudioUnitScope_Input,
                        0, &sf, sizeof(AudioStreamBasicDescription));
 
-  AudioUnitInitialize(*c);
-  AudioOutputUnitStart(*c);
+  if (status != noErr)
+  {
+    return 1;
+  }
+
+  status = AudioUnitInitialize(*c);
+
+  if (status != noErr)
+  {
+    return 2;
+  }
+
+  status = AudioOutputUnitStart(*c);
+  
+  if (status != noErr)
+  {
+    return 3;
+  }
+
+  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1, false);
+
   return 0;
 }
 
 int stopPlay(AudioUnit *c)
 {
-  AudioOutputUnitStop(*c);
-  AudioUnitUninitialize(*c);
+  OSStatus status;
+
+  status = AudioOutputUnitStop(*c);
+
+  if (status != noErr)
+  {
+    return 1;
+  }
+
+  status = AudioUnitUninitialize(*c);
+  if (status != noErr)
+  {
+    return 2;
+  }
+
   return 0;
 }
 
