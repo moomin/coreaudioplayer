@@ -36,7 +36,7 @@ OSStatus myRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-  printf("AURender: \n");
+  printf("AURender: %d\n", 2);
   return noErr;
 }
 
@@ -74,15 +74,9 @@ int GetAudioUnit(AudioComponentInstance *ci)
   input.inputProc = myRenderer;
   input.inputProcRefCon = NULL;
 
-  renderer = myRenderer;
-  void *vd;
-
-  status = AudioUnitAddRenderNotify(*ci, renderer, vd);
-
-/*
   status = AudioUnitSetProperty(*ci, kAudioUnitProperty_SetRenderCallback,
                                 kAudioUnitScope_Input, 0, &input, sizeof(input));
-*/
+
 
   if (status != noErr)
   {
@@ -100,11 +94,11 @@ int startPlay(AudioUnit *c)
   sf.mFormatID = kAudioFormatLinearPCM;
   sf.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger |
                     kLinearPCMFormatFlagIsPacked |
-                    kAudioFormatFlagsNativeEndian |
-                    kAudioFormatFlagIsNonInterleaved;
-  sf.mBytesPerPacket = 2;
+                    kAudioFormatFlagsNativeEndian
+;
+  sf.mBytesPerPacket = 4;
   sf.mFramesPerPacket = 1;
-  sf.mBytesPerFrame = 2;
+  sf.mBytesPerFrame = 4;
   sf.mChannelsPerFrame = 2;
   sf.mBitsPerChannel = 16;
 
@@ -132,7 +126,15 @@ int startPlay(AudioUnit *c)
     return 3;
   }
 
-  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1, false);
+  SInt32 exit_reason;
+  do {
+  exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, true);
+  } while (exit_reason == kCFRunLoopRunHandledSource);
+
+  if (status != noErr)
+  {
+    return 4;
+  }
 
   return 0;
 }
