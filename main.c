@@ -36,7 +36,15 @@ OSStatus myRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-  printf("AURender: %d\n", 2);
+//  char src[4];
+//  src[0] = 0;
+//  src[1] = 0;
+//  src[2] = 0;
+//  src[3] = 0;
+ // memcpy(ioData->mBuffers[0].mData, src, sizeof(src));
+  //ioData->mBuffers[0].mDataByteSize = 4;
+  AudioBufferList bb;
+  printf("AURender bus frames: %u %p\n", inNumberFrames,&bb );
   return noErr;
 }
 
@@ -128,8 +136,8 @@ int startPlay(AudioUnit *c)
 
   SInt32 exit_reason;
   do {
-  exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, true);
-  } while (exit_reason == kCFRunLoopRunHandledSource);
+  exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, false);
+  } while (1);
 
   if (status != noErr)
   {
