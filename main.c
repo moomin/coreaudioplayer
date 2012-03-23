@@ -13,8 +13,6 @@ int main(int argc, char **argv)
   int status;
   AudioUnit au;
 
-  printf("Hello World!\n");
-
   status = GetAudioUnit(&au);
   printf("Search result: %d\n", status);
 
@@ -36,15 +34,7 @@ OSStatus myRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-//  char src[4];
-//  src[0] = 0;
-//  src[1] = 0;
-//  src[2] = 0;
-//  src[3] = 0;
- // memcpy(ioData->mBuffers[0].mData, src, sizeof(src));
-  //ioData->mBuffers[0].mDataByteSize = 4;
-  AudioBufferList bb;
-  printf("AURender bus frames: %u %p\n", inNumberFrames,&bb );
+  printf("ioData address: %p; flags: %d\n", ioData, *ioActionFlags);
   return noErr;
 }
 
@@ -97,18 +87,26 @@ int GetAudioUnit(AudioComponentInstance *ci)
 int startPlay(AudioUnit *c)
 {
   OSStatus status;
-  AudioStreamBasicDescription sf;
+  AudioStreamBasicDescription sf = {0};
+  UInt32 channels;
+  UInt32 bits;
+
+  channels = 2;
+  bits = 16;
+
   sf.mSampleRate = 44100.0;
   sf.mFormatID = kAudioFormatLinearPCM;
   sf.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger |
                     kLinearPCMFormatFlagIsPacked |
                     kAudioFormatFlagsNativeEndian
 ;
-  sf.mBytesPerPacket = 4;
+
+  sf.mBitsPerChannel = bits;
+  sf.mChannelsPerFrame = channels;
+  sf.mBytesPerFrame = (bits / 8) * channels;
   sf.mFramesPerPacket = 1;
-  sf.mBytesPerFrame = 4;
-  sf.mChannelsPerFrame = 2;
-  sf.mBitsPerChannel = 16;
+  sf.mBytesPerPacket = (bits / 8) * channels * 1;
+  sf.mReserved = 0;
 
   status = AudioUnitSetProperty(*c,
                        kAudioUnitProperty_StreamFormat,
