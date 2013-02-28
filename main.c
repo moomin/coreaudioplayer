@@ -8,6 +8,8 @@ int startPlay(AudioUnit *ci);
 int stopPlay(AudioUnit *ci);
 int closeUnit(AudioUnit *ci);
 
+double renderPhase;
+
 int main(int argc, char **argv)
 {
   int status;
@@ -34,7 +36,20 @@ OSStatus myRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-  printf("ioData address: %p; flags: %d\n", ioData, *ioActionFlags);
+  double currPhase = *((double *)inRefCon);
+  Float32 *outputBuffer = (Float32 *)ioData->mBuffers[0].mData;
+  const double frequency = 2.;
+  const double phaseStep = (frequency / 44100.) * (M_PI * 2.);
+  
+  for (int i = 0; i < inNumberFrames; i++)
+  {
+    outputBuffer[i] = sin(currPhase);
+    currPhase += phaseStep;
+  }
+
+  *((double *)inRefCon) = currPhase;
+
+  printf("ioData address: %p; inNumberFrames: %d; flags: %d\n", ioData, inNumberFrames, *ioActionFlags);
   return noErr;
 }
 
@@ -70,7 +85,7 @@ int GetAudioUnit(AudioComponentInstance *ci)
 
   AURenderCallbackStruct input;
   input.inputProc = myRenderer;
-  input.inputProcRefCon = NULL;
+  input.inputProcRefCon = &renderPhase;
 
   status = AudioUnitSetProperty(*ci, kAudioUnitProperty_SetRenderCallback,
                                 kAudioUnitScope_Input, 0, &input, sizeof(input));
@@ -88,11 +103,8 @@ int startPlay(AudioUnit *c)
 {
   OSStatus status;
   AudioStreamBasicDescription sf = {0};
-  UInt32 channels;
-  UInt32 bits;
-
-  channels = 2;
-  bits = 16;
+  UInt32 channels = 2;
+  UInt32 bits = 16;
 
   sf.mSampleRate = 44100.0;
   sf.mFormatID = kAudioFormatLinearPCM;
@@ -105,7 +117,7 @@ int startPlay(AudioUnit *c)
   sf.mChannelsPerFrame = channels;
   sf.mBytesPerFrame = (bits / 8) * channels;
   sf.mFramesPerPacket = 1;
-  sf.mBytesPerPacket = (bits / 8) * channels * 1;
+  sf.mBytesPerPacket = sf.mBytesPerFrame * sf.mFramesPerPacket;
   sf.mReserved = 0;
 
   status = AudioUnitSetProperty(*c,
