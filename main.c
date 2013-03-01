@@ -26,12 +26,18 @@ int main(int argc, char **argv)
       return 1;
     }
 
+    audioBuffer ab;
+
+    ab.audioDataPos = buffer;
+    ab.playedBytes = 0;
+    ab.totalBytes = 1024*1024;
+
     printf("file successfully read into buffer\n");
 
     dumpBuffer("./buffer.dump", buffer, bufferSize);
     printf("file successfully dumped\n");
 
-    status = GetAudioUnit(&au, fileRenderer, buffer);
+    status = GetAudioUnit(&au, fileRenderer, &ab);
   }
   else
   {

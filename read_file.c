@@ -23,8 +23,8 @@ int readFile(const char *filename, char *buffer, size_t bufferSize)
   {
     itemsRead = fread(ioBuffer, CHUNK_SIZE, 4, stream);
     bufferSize -= itemsRead * CHUNK_SIZE;
-		bufferPos += sizeof(char) * CHUNK_SIZE * 4;
     memcpy(bufferPos, ioBuffer, itemsRead * CHUNK_SIZE);
+    bufferPos += sizeof(char) * CHUNK_SIZE * 4;
   }
   while ((itemsRead > 0) && (bufferSize > 0));
 
@@ -38,12 +38,13 @@ int dumpBuffer(const char *filename, char *buffer, size_t bufferSize)
 
   char *bufferPos = buffer;
 
-	do
-	{
+  do
+  {
     fwrite(bufferPos, CHUNK_SIZE, 4, stream);
-		bufferPos += sizeof(char) * CHUNK_SIZE * 4;
+    bufferPos += sizeof(char) * CHUNK_SIZE * 4;
     bufferSize -= CHUNK_SIZE * 4;
-	}
-	while (bufferSize > 0);
+  }
+  while (bufferSize > 0);
+
   return fclose(stream);
 }

@@ -13,3 +13,9 @@ OSStatus fileRenderer(void *inRefCon,
                   UInt32 inBusNumber,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData);
+
+typedef struct {
+  void *audioDataPos;
+  size_t playedBytes;
+  size_t totalBytes;
+} audioBuffer;

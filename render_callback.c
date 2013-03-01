@@ -32,16 +32,16 @@ OSStatus fileRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-  int32_t currFrame = *((int32_t *)inRefCon);
+  audioBuffer *ab;
+  ab = (audioBuffer *)inRefCon;
   int *outputBuffer = (int *)ioData->mBuffers[0].mData;
 
-	for (int i = 0; i < inNumberFrames; i++)
-	{
-    outputBuffer[i] = currFrame;
-		inRefCon += sizeof(int32_t);
-		currFrame = *((int32_t *)inRefCon);
-	}
+  for (int i = 0; i < inNumberFrames; i++)
+  {
+    outputBuffer[i] = *((int *)ab->audioDataPos);
+    ab->audioDataPos += sizeof(int);
+  }
 
-  printf("inNumberFrames: %d; currFrame = %d\n", inNumberFrames, currFrame);
+  //printf("inNumberFrames: %d; inRefCon addr = %p\n", inNumberFrames, inRefCon);
   return noErr;
 }
