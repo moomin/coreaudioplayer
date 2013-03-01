@@ -1,7 +1,7 @@
 #include "audio_unit.h"
-#include "render_callback.h"
+//#include "render_callback.h"
 
-int GetAudioUnit(AudioComponentInstance *ci)
+int GetAudioUnit(AudioComponentInstance *ci, void *rendererFunction, void *rendererData)
 {
   AudioComponent component;
   AudioComponentDescription dsc;
@@ -32,8 +32,8 @@ int GetAudioUnit(AudioComponentInstance *ci)
   }
 
   AURenderCallbackStruct input;
-  input.inputProc = myRenderer;
-  input.inputProcRefCon = &renderPhase;
+  input.inputProc = rendererFunction;
+  input.inputProcRefCon = rendererData;
 
   status = AudioUnitSetProperty(*ci, kAudioUnitProperty_SetRenderCallback,
                                 kAudioUnitScope_Input, 0, &input, sizeof(input));
