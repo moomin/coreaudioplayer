@@ -2,8 +2,6 @@
 #include <string.h>
 #include "read_file.h"
 
-#define CHUNK_SIZE 512
-
 int readFile(const char *filename, char *buffer, size_t bufferSize)
 {
   FILE *stream;
@@ -19,6 +17,9 @@ int readFile(const char *filename, char *buffer, size_t bufferSize)
 
   size_t itemsRead, totalBytesRead;
 
+  //skip WAV header
+  fseek(stream, WAV_HEADER_LENGTH, SEEK_SET);
+
   do
   {
     itemsRead = fread(ioBuffer, CHUNK_SIZE, 4, stream);
@@ -31,20 +32,3 @@ int readFile(const char *filename, char *buffer, size_t bufferSize)
   return fclose(stream);
 }
 
-int dumpBuffer(const char *filename, char *buffer, size_t bufferSize)
-{
-  FILE *stream;
-	stream = fopen(filename, "w");
-
-  char *bufferPos = buffer;
-
-  do
-  {
-    fwrite(bufferPos, CHUNK_SIZE, 4, stream);
-    bufferPos += sizeof(char) * CHUNK_SIZE * 4;
-    bufferSize -= CHUNK_SIZE * 4;
-  }
-  while (bufferSize > 0);
-
-  return fclose(stream);
-}

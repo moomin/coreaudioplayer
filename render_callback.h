@@ -18,4 +18,5 @@ typedef struct {
   void *audioDataPos;
   size_t playedBytes;
   size_t totalBytes;
+  AudioUnit *au;
 } audioBuffer;

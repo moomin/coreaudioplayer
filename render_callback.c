@@ -35,13 +35,25 @@ OSStatus fileRenderer(void *inRefCon,
   audioBuffer *ab;
   ab = (audioBuffer *)inRefCon;
   int *outputBuffer = (int *)ioData->mBuffers[0].mData;
+  short enough = 0;
 
   for (int i = 0; i < inNumberFrames; i++)
   {
+    //render silence if the buffer ended
+    if (ab->playedBytes >= ab->totalBytes)
+    {
+      outputBuffer[i] = (int)0;
+      continue;
+    }
+
     outputBuffer[i] = *((int *)ab->audioDataPos);
+
+    //move position in the buffer
     ab->audioDataPos += sizeof(int);
+    //remember how many bytes we already retrieved from the buffer
+    ab->playedBytes += sizeof(int);
+
   }
 
-  //printf("inNumberFrames: %d; inRefCon addr = %p\n", inNumberFrames, inRefCon);
   return noErr;
 }

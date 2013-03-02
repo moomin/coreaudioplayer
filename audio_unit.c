@@ -1,5 +1,4 @@
 #include "audio_unit.h"
-//#include "render_callback.h"
 
 int GetAudioUnit(AudioComponentInstance *ci, void *rendererFunction, void *rendererData)
 {
@@ -34,7 +33,7 @@ int GetAudioUnit(AudioComponentInstance *ci, void *rendererFunction, void *rende
   AURenderCallbackStruct input;
   input.inputProc = rendererFunction;
   input.inputProcRefCon = rendererData;
-printf("inputProcRefCon = %p\n", rendererData);
+
   status = AudioUnitSetProperty(*ci, kAudioUnitProperty_SetRenderCallback,
                                 kAudioUnitScope_Input, 0, &input, sizeof(input));
 

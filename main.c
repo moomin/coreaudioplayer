@@ -15,27 +15,25 @@ int main(int argc, char **argv)
   double renderPhase;
 
   if (RENDER_FILE)
-	{
-		void *buffer;
-		size_t bufferSize = 1024 * 1024;
-		buffer = calloc(1024, 1024);
+  {
+    void *buffer;
+    size_t bufferSize = 1024 * 1024;
+    buffer = calloc(1024, 1024);
 
     if (prepareBuffer("./sample.wav", buffer, bufferSize) != 0)
     {
-      printf("error reading file into buffer\n");
+      printf("error reading file into the buffer\n");
       return 1;
     }
 
-    audioBuffer ab;
+    printf("file has been successfully read into the buffer\n");
 
+    //setup audioBuffer info for renderer
+    audioBuffer ab;
     ab.audioDataPos = buffer;
     ab.playedBytes = 0;
-    ab.totalBytes = 1024*1024;
-
-    printf("file successfully read into buffer\n");
-
-    dumpBuffer("./buffer.dump", buffer, bufferSize);
-    printf("file successfully dumped\n");
+    ab.totalBytes = bufferSize;
+    ab.au = &au;
 
     status = GetAudioUnit(&au, fileRenderer, &ab);
   }
@@ -44,13 +42,13 @@ int main(int argc, char **argv)
     status = GetAudioUnit(&au, sinRenderer, &renderPhase);
   }
 
-  printf("Search result: %d\n", status);
+  printf("AudioUnit search result: %d\n", status);
 
+  printf("starting playback\n");
   status = startPlay(&au);
-  printf("startPlay: %d\n", status);
 
+  printf("stopping playback\n");
   status = stopPlay(&au);
-  printf("stopPlay: %d\n", status);
 
   closeUnit(&au);
 
