@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "audio_unit.h"
 
 int getAudioUnit(AudioComponentInstance *ci)
@@ -98,16 +99,16 @@ int startPlay(AudioUnit *c)
     return 3;
   }
 
+//just enough time to play 1M worth of 44.1kHz 16bit stereo WAV data
+  usleep(7000000);
+
+/* just discovered that I don't need to call CFRunLoopInMode
   SInt32 exit_reason;
   do {
+  break;
     exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, false);
   } while (1);
-
-  if (status != noErr)
-  {
-    return 4;
-  }
-
+*/
   return 0;
 }
 
