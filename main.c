@@ -14,6 +14,12 @@ int main(int argc, char **argv)
 
   double renderPhase;
 
+  if (getAudioUnit(&au) != noErr)
+  {
+    printf("Cannot obtain AudioUnit component. Exiting\n");
+    return 1;
+  }
+
   if (RENDER_FILE)
   {
     void *buffer;
@@ -22,11 +28,11 @@ int main(int argc, char **argv)
 
     if (prepareBuffer("./sample.wav", buffer, bufferSize) != 0)
     {
-      printf("error reading file into the buffer\n");
+      printf("Error reading file into the buffer. Exiting\n");
       return 1;
     }
 
-    printf("file has been successfully read into the buffer\n");
+    printf("File has been successfully read into the buffer\n");
 
     //setup audioBuffer info for renderer
     audioBuffer ab;
@@ -35,14 +41,19 @@ int main(int argc, char **argv)
     ab.totalBytes = bufferSize;
     ab.au = &au;
 
-    status = GetAudioUnit(&au, fileRenderer, &ab);
+    status = setupAudioUnit(&au, fileRenderer, &ab);
   }
   else
   {
-    status = GetAudioUnit(&au, sinRenderer, &renderPhase);
+    status = setupAudioUnit(&au, sinRenderer, &renderPhase);
   }
 
-  printf("AudioUnit search result: %d\n", status);
+  if (status != noErr)
+  {
+    closeUnit(&au);
+    printf("Error setting up an AudioUnit. Exiting\n");
+    return 1;
+  }
 
   printf("starting playback\n");
   status = startPlay(&au);

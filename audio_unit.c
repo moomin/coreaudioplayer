@@ -1,6 +1,6 @@
 #include "audio_unit.h"
 
-int GetAudioUnit(AudioComponentInstance *ci, void *rendererFunction, void *rendererData)
+int getAudioUnit(AudioComponentInstance *ci)
 {
   AudioComponent component;
   AudioComponentDescription dsc;
@@ -30,25 +30,25 @@ int GetAudioUnit(AudioComponentInstance *ci, void *rendererFunction, void *rende
     return 2;
   }
 
+  return 0;
+}
+
+int setupAudioUnit(AudioUnit *au, void *rendererFunction, void *rendererData)
+{
+  OSStatus status;
   AURenderCallbackStruct input;
   input.inputProc = rendererFunction;
   input.inputProcRefCon = rendererData;
 
-  status = AudioUnitSetProperty(*ci, kAudioUnitProperty_SetRenderCallback,
+  status = AudioUnitSetProperty(*au, kAudioUnitProperty_SetRenderCallback,
                                 kAudioUnitScope_Input, 0, &input, sizeof(input));
-
 
   if (status != noErr)
   {
-    return 3;
+    return 1;
   }
 
-  return 0;
-}
-
-int startPlay(AudioUnit *c)
-{
-  OSStatus status;
+  //fill-in stream description
   AudioStreamBasicDescription sf = {0};
   UInt32 channels = 2;
   UInt32 bits = 16;
@@ -67,7 +67,7 @@ int startPlay(AudioUnit *c)
   sf.mBytesPerPacket = sf.mBytesPerFrame * sf.mFramesPerPacket;
   sf.mReserved = 0;
 
-  status = AudioUnitSetProperty(*c,
+  status = AudioUnitSetProperty(*au,
                        kAudioUnitProperty_StreamFormat,
                        kAudioUnitScope_Input,
                        0, &sf, sizeof(AudioStreamBasicDescription));
@@ -76,6 +76,13 @@ int startPlay(AudioUnit *c)
   {
     return 1;
   }
+
+  return 0;
+}
+
+int startPlay(AudioUnit *c)
+{
+  OSStatus status;
 
   status = AudioUnitInitialize(*c);
 
@@ -93,7 +100,7 @@ int startPlay(AudioUnit *c)
 
   SInt32 exit_reason;
   do {
-  exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, false);
+    exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, false);
   } while (1);
 
   if (status != noErr)
