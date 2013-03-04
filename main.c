@@ -76,13 +76,14 @@ int playWavFile(char *filename)
   printf("File has been successfully read into the buffer\n");
 
   //setup audioBuffer info for renderer
-  audioBuffer ab;
-  ab.audioDataPos = buffer;
-  ab.playedBytes = 0;
-  ab.totalBytes = bufferSize;
-  ab.au = &au;
+  wavBuffer wav;
+  wav.bufferCapacity = 1024*1024;
+  wav.startPtr = buffer;
+  wav.currentPtr = buffer;
+  wav.bytesLeftA = 0;
+  wav.bytesLeftB = 0;
 
-  status = setupAudioUnit(&au, fileRenderer, &ab);
+  status = setupAudioUnit(&au, wavRenderer, &wav);
 
   if (status != noErr)
   {

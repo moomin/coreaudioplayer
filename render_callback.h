@@ -7,7 +7,7 @@ OSStatus sinRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData);
 
-OSStatus fileRenderer(void *inRefCon,
+OSStatus wavRenderer(void *inRefCon,
                   AudioUnitRenderActionFlags *ioActionFlags,
                   const AudioTimeStamp *inTimeStamp,
                   UInt32 inBusNumber,
@@ -15,8 +15,11 @@ OSStatus fileRenderer(void *inRefCon,
                   AudioBufferList *ioData);
 
 typedef struct {
-  void *audioDataPos;
-  size_t playedBytes;
-  size_t totalBytes;
-  AudioUnit *au;
-} audioBuffer;
+  size_t bufferCapacity;
+
+  void *startPtr;
+  void *currentPtr;
+
+  size_t bytesLeftA;
+  size_t bytesLeftB;
+} wavBuffer;

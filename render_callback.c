@@ -25,34 +25,36 @@ OSStatus sinRenderer(void *inRefCon,
   return noErr;
 }
 
-OSStatus fileRenderer(void *inRefCon,
+OSStatus wavRenderer(void *inRefCon,
                   AudioUnitRenderActionFlags *ioActionFlags,
                   const AudioTimeStamp *inTimeStamp,
                   UInt32 inBusNumber,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-  audioBuffer *ab;
-  ab = (audioBuffer *)inRefCon;
+  wavBuffer *wav;
+  wav = (wavBuffer *)inRefCon;
   int *outputBuffer = (int *)ioData->mBuffers[0].mData;
   short enough = 0;
 
+  //TODO: reset wav->currentPtr to wav->startPtr if currentPtr is out of bounds
+
   for (int i = 0; i < inNumberFrames; i++)
   {
-    //render silence if the buffer ended
-    if (ab->playedBytes >= ab->totalBytes)
+    //render silence if there is nothing to play
+    if ((wav->bytesLeftA <= 0) && (wav->bytesLeftB <= 0))
     {
       outputBuffer[i] = (int)0;
       continue;
     }
 
-    outputBuffer[i] = *((int *)ab->audioDataPos);
+    outputBuffer[i] = *((int *)wav->currentPtr);
 
-    //move position in the buffer
-    ab->audioDataPos += sizeof(int);
-    //remember how many bytes we already retrieved from the buffer
-    ab->playedBytes += sizeof(int);
+    //TODO: decrease amount of available bytes in corresponding part of the buffer (A or B)
+    //wav->bytesLeft += sizeof(int);
 
+    //advance the position in the buffer
+    wav->currentPtr += sizeof(int);
   }
 
   return noErr;
