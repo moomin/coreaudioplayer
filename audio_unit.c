@@ -75,7 +75,7 @@ int setupAudioUnit(AudioUnit *au, void *rendererFunction, void *rendererData)
 
   if (status != noErr)
   {
-    return 1;
+    return 2;
   }
 
   return 0;
@@ -89,26 +89,16 @@ int startPlay(AudioUnit *c)
 
   if (status != noErr)
   {
-    return 2;
+    return 1;
   }
 
   status = AudioOutputUnitStart(*c);
   
   if (status != noErr)
   {
-    return 3;
+    return 2;
   }
 
-//just enough time to play 1M worth of 44.1kHz 16bit stereo WAV data
-  usleep(7000000);
-
-/* just discovered that I don't need to call CFRunLoopInMode
-  SInt32 exit_reason;
-  do {
-  break;
-    exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, false);
-  } while (1);
-*/
   return 0;
 }
 

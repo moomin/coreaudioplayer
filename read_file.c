@@ -2,6 +2,8 @@
 #include <string.h>
 #include "read_file.h"
 
+int playFile();
+
 int readFile(const char *filename, char *buffer, size_t bufferSize)
 {
   FILE *stream;
