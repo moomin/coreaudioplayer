@@ -64,8 +64,6 @@ int playWavFile(char *filename)
     return 1;
   }
 
-  printf("File has been successfully read into the buffer\n");
-
   //setup audioBuffer info for renderer
   wavBuffer wav;
   wav.bufferCapacity = BUFFER_CAPACITY_KB * 1024;
