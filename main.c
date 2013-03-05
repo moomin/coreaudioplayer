@@ -4,6 +4,7 @@
 #include "read_file.h"
 
 #define RENDER_FILE true
+#define BUFFER_CAPACITY_KB 1024
 
 int playSineWave();
 int playWavFile(char *filename);
@@ -63,23 +64,14 @@ int playWavFile(char *filename)
     return 1;
   }
 
-  void *buffer;
-  size_t bufferSize = 1024 * 1024;
-  buffer = calloc(1024, 1024);
-
-  if (prepareBuffer(filename, buffer, bufferSize) != 0)
-  {
-    printf("Error reading file into the buffer. Exiting\n");
-    return 1;
-  }
-
   printf("File has been successfully read into the buffer\n");
 
   //setup audioBuffer info for renderer
   wavBuffer wav;
-  wav.bufferCapacity = 1024*1024;
-  wav.startPtr = buffer;
-  wav.currentPtr = buffer;
+  wav.bufferCapacity = BUFFER_CAPACITY_KB * 1024;
+  wav.startPtr = calloc(BUFFER_CAPACITY_KB, 1024);
+  wav.boundaryPtr = wav.startPtr + (BUFFER_CAPACITY_KB * 1024 / 2);
+  wav.currentPtr = wav.startPtr;
   wav.bytesLeftA = 0;
   wav.bytesLeftB = 0;
 
@@ -95,14 +87,7 @@ int playWavFile(char *filename)
   printf("starting playback\n");
   status = startPlay(&au);
 
-//just enough time to play 1M worth of 44.1kHz 16bit stereo WAV data
-  usleep(7000000);
-
-/* just discovered that I don't need to call CFRunLoopInMode
-  SInt32 exit_reason;
-  do exit_reason = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.51, false);
-  while (1);
-*/
+  feedTheBuffer("./sample.wav", &wav);
 
   printf("stopping playback\n");
   status = stopPlay(&au);
@@ -112,7 +97,3 @@ int playWavFile(char *filename)
   return status;
 }
 
-int prepareBuffer(char *filename, char *buffer, size_t bufferSize)
-{
-  return readFile(filename, buffer, bufferSize);
-}

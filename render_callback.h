@@ -18,6 +18,7 @@ typedef struct {
   size_t bufferCapacity;
 
   void *startPtr;
+  void *boundaryPtr;
   void *currentPtr;
 
   size_t bytesLeftA;

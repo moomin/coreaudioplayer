@@ -35,9 +35,12 @@ OSStatus wavRenderer(void *inRefCon,
   wavBuffer *wav;
   wav = (wavBuffer *)inRefCon;
   int *outputBuffer = (int *)ioData->mBuffers[0].mData;
-  short enough = 0;
 
-  //TODO: reset wav->currentPtr to wav->startPtr if currentPtr is out of bounds
+  //reset wav->currentPtr to wav->startPtr if currentPtr is out of bounds
+  if (wav->currentPtr == (wav->startPtr + wav->bufferCapacity))
+	{
+    wav->currentPtr = wav->startPtr;
+	}
 
   for (int i = 0; i < inNumberFrames; i++)
   {
@@ -50,8 +53,14 @@ OSStatus wavRenderer(void *inRefCon,
 
     outputBuffer[i] = *((int *)wav->currentPtr);
 
-    //TODO: decrease amount of available bytes in corresponding part of the buffer (A or B)
-    //wav->bytesLeft += sizeof(int);
+    if (wav->currentPtr < wav->boundaryPtr)
+		{
+      wav->bytesLeftA -= sizeof(int);
+		}
+		else
+		{
+      wav->bytesLeftB -= sizeof(int);
+		}
 
     //advance the position in the buffer
     wav->currentPtr += sizeof(int);
