@@ -37,6 +37,7 @@ int feedTheBuffer(const char *filename, wavBuffer *wav)
     }
 
     //sleep for 2s
+    //TODO: consider using nanosleep
     usleep(2000 * 1000);
   }
   while(bytesRead > 0);
