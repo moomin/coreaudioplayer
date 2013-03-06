@@ -38,9 +38,9 @@ OSStatus wavRenderer(void *inRefCon,
 
   //reset wav->currentPtr to wav->startPtr if currentPtr is out of bounds
   if (wav->currentPtr == (wav->startPtr + wav->bufferCapacity))
-	{
+  {
     wav->currentPtr = wav->startPtr;
-	}
+  }
 
   for (int i = 0; i < inNumberFrames; i++)
   {
@@ -54,13 +54,13 @@ OSStatus wavRenderer(void *inRefCon,
     outputBuffer[i] = *((int *)wav->currentPtr);
 
     if (wav->currentPtr < wav->boundaryPtr)
-		{
+    {
       wav->bytesLeftA -= sizeof(int);
-		}
-		else
-		{
+    }
+    else
+    {
       wav->bytesLeftB -= sizeof(int);
-		}
+    }
 
     //advance the position in the buffer
     wav->currentPtr += sizeof(int);
