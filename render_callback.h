@@ -14,6 +14,13 @@ OSStatus wavRenderer(void *inRefCon,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData);
 
+
+
+typedef struct {
+  int chunkSize;
+  
+} streamFormat;
+
 typedef struct {
   size_t bufferCapacity;
 

@@ -8,15 +8,22 @@
 
 int playSineWave();
 int playWavFile(char *filename);
-int prepareBuffer(char *filename, char *buffer, size_t bufferSize);
 
 int main(int argc, char **argv)
 {
+  if (argc != 2)
+  {
+    printf("Usage: cap <filename>\n");
+    exit(1);
+  }
+
+  
+
   int status;
 
   if (RENDER_FILE)
   {
-    return playWavFile("./sample.wav");
+    return playWavFile(argv[1]);
   }
   else
   {
@@ -85,7 +92,7 @@ int playWavFile(char *filename)
   printf("starting playback\n");
   status = startPlay(&au);
 
-  feedTheBuffer("./sample.wav", &wav);
+  feedTheBuffer(filename, &wav);
 
   printf("stopping playback\n");
   status = stopPlay(&au);
