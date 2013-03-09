@@ -3,10 +3,8 @@
 #include "audio_unit.h"
 #include "read_file.h"
 
-#define RENDER_FILE true
 #define BUFFER_CAPACITY_KB 1024
 
-int playSineWave();
 int playWavFile(char *filename);
 
 int main(int argc, char **argv)
@@ -17,51 +15,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  int status;
-
-  if (RENDER_FILE)
-  {
-    return playWavFile(argv[1]);
-  }
-  else
-  {
-    return playSineWave();
-  }
-}
-
-int playSineWave()
-{
-  int status;
-  double renderPhase;
-  AudioUnit au;
-
-  if (getAudioUnit(&au) != noErr)
-  {
-    printf("Cannot obtain AudioUnit component. Exiting\n");
-    return 1;
-  }
-
-  status = setupAudioUnit(&au, sinRenderer, &renderPhase);
-
-  if (status != noErr)
-  {
-    closeUnit(&au);
-    printf("Error setting up an AudioUnit. Exiting\n");
-    return 2;
-  }
-
-  printf("starting to play sine wave\n");
-  status = startPlay(&au);
-
-  //let it play for 10 seconds
-  usleep(10000000);
-
-  printf("stopping playback\n");
-  status = stopPlay(&au);
-
-  closeUnit(&au);
-
-  return status;
+  return playWavFile(argv[1]);
 }
 
 int playWavFile(char *filename)

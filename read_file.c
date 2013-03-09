@@ -17,12 +17,12 @@ int feedTheBuffer(const char *filename, pcmBuffer *pcm)
 
   if (stream == NULL)
   {
-    printf("Cannot open file: %s\n", filename);
+    fprintf(stderr, "Cannot open file: %s\n", filename);
     return 1;
   }
 
   //skip WAV header
-  fseek(stream, WAV_HEADER_LENGTH, SEEK_SET);
+  fseek(stream, sizeof(pcm->header), SEEK_SET);
 
   struct timespec pause;
   pause.tv_sec = 2;
@@ -58,36 +58,40 @@ int readWavHeader(const char *filename, wavHeader *header)
 
   if (stream == NULL)
   {
-    printf("Cannot open file: %s\n", filename);
+    fprintf(stderr, "Cannot open file: %s\n", filename);
     return 1;
   }
 
   if (fread(header, sizeof(*header), 1, stream) == 0)
   {
-    printf("Cannot read WAV header\n");
+    fprintf(stderr, "Cannot read WAV header\n");
     return 2;
   }
 
 
   if (strncmp(header->chunkId, "RIFF", 4) != 0)
   {
-    printf("RIFF header not found\n");
+    fprintf(stderr, "RIFF header not found\n");
     return 3;
   }
 
   if (strncmp(header->format, "WAVE", 4) != 0)
   {
-    printf("Format of the file is not WAVE\n");
+    fprintf(stderr, "Format of the file is not WAVE\n");
     return 4;
   }
 
   if (header->audioFormat != 1)
   {
-    printf("Audio format is not PCM\n");
+    fprintf(stderr, "Audio format is not PCM\n");
     return 5;
   }
 
-  printf("SR: %d\nbits: %d\n", header->sampleRate, header->bitsPerSample);
+  if (header->bitsPerSample != 16)
+  {
+    fprintf(stderr, "File contains %d bits per sample; Only 16 bits are supported\n", header->bitsPerSample);
+    return 6;
+  }
 
   fclose(stream);
 
