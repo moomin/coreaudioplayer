@@ -17,8 +17,6 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  
-
   int status;
 
   if (RENDER_FILE)
@@ -37,13 +35,19 @@ int playSineWave()
   double renderPhase;
   AudioUnit au;
 
+  if (getAudioUnit(&au) != noErr)
+  {
+    printf("Cannot obtain AudioUnit component. Exiting\n");
+    return 1;
+  }
+
   status = setupAudioUnit(&au, sinRenderer, &renderPhase);
 
   if (status != noErr)
   {
     closeUnit(&au);
     printf("Error setting up an AudioUnit. Exiting\n");
-    return 1;
+    return 2;
   }
 
   printf("starting to play sine wave\n");
@@ -64,35 +68,40 @@ int playWavFile(char *filename)
 {
   int status;
   AudioUnit au;
+  wavHeader header;
 
   if (getAudioUnit(&au) != noErr)
   {
-    printf("Cannot obtain AudioUnit component. Exiting\n");
+    fprintf(stderr, "Cannot obtain AudioUnit component\n");
+    return 1;
+  }
+
+  if (readWavHeader(filename, &header) != 0)
+  {
     return 1;
   }
 
   //setup audioBuffer info for renderer
-  wavBuffer wav;
-  wav.bufferCapacity = BUFFER_CAPACITY_KB * 1024;
-  wav.startPtr = calloc(BUFFER_CAPACITY_KB, 1024);
-  wav.boundaryPtr = wav.startPtr + (BUFFER_CAPACITY_KB * 1024 / 2);
-  wav.currentPtr = wav.startPtr;
-  wav.bytesLeftA = 0;
-  wav.bytesLeftB = 0;
+  pcmBuffer pcm;
+  pcm.bufferCapacity = BUFFER_CAPACITY_KB * 1024;
+  pcm.startPtr = calloc(BUFFER_CAPACITY_KB, 1024);
+  pcm.boundaryPtr = pcm.startPtr + (BUFFER_CAPACITY_KB * 1024 / 2);
+  pcm.currentPtr = pcm.startPtr;
+  pcm.bytesLeftA = 0;
+  pcm.bytesLeftB = 0;
+  pcm.header = header;
 
-  status = setupAudioUnit(&au, wavRenderer, &wav);
-
-  if (status != noErr)
+  if (setupAudioUnit(&au, pcmRenderer, &pcm) != noErr)
   {
     closeUnit(&au);
-    printf("Error setting up an AudioUnit. Exiting\n");
+    fprintf(stderr, "Error setting up an AudioUnit. Exiting\n");
     return 1;
   }
 
   printf("starting playback\n");
   status = startPlay(&au);
 
-  feedTheBuffer(filename, &wav);
+  feedTheBuffer(filename, &pcm);
 
   printf("stopping playback\n");
   status = stopPlay(&au);

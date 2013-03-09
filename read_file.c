@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include "render_callback.h"
 #include "read_file.h"
 
-int feedTheBuffer(const char *filename, wavBuffer *wav)
+int feedTheBuffer(const char *filename, pcmBuffer *pcm)
 {
   size_t bytesRead;
   FILE *stream;
@@ -12,7 +13,7 @@ int feedTheBuffer(const char *filename, wavBuffer *wav)
   void *bufferPtr;
   size_t halfBufferCapacity;
 
-  halfBufferCapacity = wav->bufferCapacity / 2;
+  halfBufferCapacity = pcm->bufferCapacity / 2;
 
   if (stream == NULL)
   {
@@ -29,16 +30,16 @@ int feedTheBuffer(const char *filename, wavBuffer *wav)
 
   do
   {
-    if (wav->bytesLeftA == 0)
+    if (pcm->bytesLeftA == 0)
     {
-      bytesRead = readFile(stream, wav->startPtr, halfBufferCapacity);
-      wav->bytesLeftA = bytesRead;
+      bytesRead = readFile(stream, pcm->startPtr, halfBufferCapacity);
+      pcm->bytesLeftA = bytesRead;
     }
 
-    if (wav->bytesLeftB == 0)
+    if (pcm->bytesLeftB == 0)
     {
-      bytesRead = readFile(stream, wav->boundaryPtr, halfBufferCapacity);
-      wav->bytesLeftB = bytesRead;
+      bytesRead = readFile(stream, pcm->boundaryPtr, halfBufferCapacity);
+      pcm->bytesLeftB = bytesRead;
     }
 
     nanosleep(&pause, NULL);
@@ -50,8 +51,46 @@ int feedTheBuffer(const char *filename, wavBuffer *wav)
   return bytesRead;
 }
 
-int readWavHeader(const char *filename, streamFormat *fmt)
+int readWavHeader(const char *filename, wavHeader *header)
 {
+  FILE *stream;
+  stream = fopen(filename, "r");
+
+  if (stream == NULL)
+  {
+    printf("Cannot open file: %s\n", filename);
+    return 1;
+  }
+
+  if (fread(header, sizeof(*header), 1, stream) == 0)
+  {
+    printf("Cannot read WAV header\n");
+    return 2;
+  }
+
+
+  if (strncmp(header->chunkId, "RIFF", 4) != 0)
+  {
+    printf("RIFF header not found\n");
+    return 3;
+  }
+
+  if (strncmp(header->format, "WAVE", 4) != 0)
+  {
+    printf("Format of the file is not WAVE\n");
+    return 4;
+  }
+
+  if (header->audioFormat != 1)
+  {
+    printf("Audio format is not PCM\n");
+    return 5;
+  }
+
+  printf("SR: %d\nbits: %d\n", header->sampleRate, header->bitsPerSample);
+
+  fclose(stream);
+
   return 0;
 }
 

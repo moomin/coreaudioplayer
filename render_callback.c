@@ -25,45 +25,45 @@ OSStatus sinRenderer(void *inRefCon,
   return noErr;
 }
 
-OSStatus wavRenderer(void *inRefCon,
+OSStatus pcmRenderer(void *inRefCon,
                   AudioUnitRenderActionFlags *ioActionFlags,
                   const AudioTimeStamp *inTimeStamp,
                   UInt32 inBusNumber,
                   UInt32 inNumberFrames,
                   AudioBufferList *ioData)
 {
-  wavBuffer *wav;
-  wav = (wavBuffer *)inRefCon;
+  pcmBuffer *pcm;
+  pcm = (pcmBuffer *)inRefCon;
   int *outputBuffer = (int *)ioData->mBuffers[0].mData;
 
   //reset wav->currentPtr to wav->startPtr if currentPtr is out of bounds
-  if (wav->currentPtr == (wav->startPtr + wav->bufferCapacity))
+  if (pcm->currentPtr == (pcm->startPtr + pcm->bufferCapacity))
   {
-    wav->currentPtr = wav->startPtr;
+    pcm->currentPtr = pcm->startPtr;
   }
 
   for (int i = 0; i < inNumberFrames; i++)
   {
     //render silence if there is nothing to play
-    if ((wav->bytesLeftA <= 0) && (wav->bytesLeftB <= 0))
+    if ((pcm->bytesLeftA <= 0) && (pcm->bytesLeftB <= 0))
     {
       outputBuffer[i] = (int)0;
       continue;
     }
 
-    outputBuffer[i] = *((int *)wav->currentPtr);
+    outputBuffer[i] = *((int *)pcm->currentPtr);
 
-    if (wav->currentPtr < wav->boundaryPtr)
+    if (pcm->currentPtr < pcm->boundaryPtr)
     {
-      wav->bytesLeftA -= sizeof(int);
+      pcm->bytesLeftA -= sizeof(int);
     }
     else
     {
-      wav->bytesLeftB -= sizeof(int);
+      pcm->bytesLeftB -= sizeof(int);
     }
 
     //advance the position in the buffer
-    wav->currentPtr += sizeof(int);
+    pcm->currentPtr += sizeof(int);
   }
 
   return noErr;

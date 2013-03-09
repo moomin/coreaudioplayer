@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include "render_callback.h"
 #include "audio_unit.h"
 
 int getAudioUnit(AudioComponentInstance *ci)
@@ -37,7 +38,9 @@ int getAudioUnit(AudioComponentInstance *ci)
 int setupAudioUnit(AudioUnit *au, void *rendererFunction, void *rendererData)
 {
   OSStatus status;
+  wavHeader wavhdr;
   AURenderCallbackStruct input;
+
   input.inputProc = rendererFunction;
   input.inputProcRefCon = rendererData;
 
@@ -49,21 +52,21 @@ int setupAudioUnit(AudioUnit *au, void *rendererFunction, void *rendererData)
     return 1;
   }
 
+  wavhdr = (wavHeader)((pcmBuffer *)rendererData)->header;
+
   //fill-in stream description
   AudioStreamBasicDescription sf = {0};
-  UInt32 channels = 2;
-  UInt32 bits = 16;
 
-  sf.mSampleRate = 44100.0;
+  sf.mSampleRate = (Float64)wavhdr.sampleRate;
   sf.mFormatID = kAudioFormatLinearPCM;
   sf.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger |
                     kLinearPCMFormatFlagIsPacked |
                     kAudioFormatFlagsNativeEndian
 ;
 
-  sf.mBitsPerChannel = bits;
-  sf.mChannelsPerFrame = channels;
-  sf.mBytesPerFrame = (bits / 8) * channels;
+  sf.mBitsPerChannel = wavhdr.bitsPerSample;
+  sf.mChannelsPerFrame = wavhdr.numChannels;
+  sf.mBytesPerFrame = (wavhdr.bitsPerSample / 8) * wavhdr.numChannels;
   sf.mFramesPerPacket = 1;
   sf.mBytesPerPacket = sf.mBytesPerFrame * sf.mFramesPerPacket;
   sf.mReserved = 0;
